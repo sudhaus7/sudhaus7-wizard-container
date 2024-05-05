@@ -24,7 +24,7 @@ class WizardProcess implements WizardProcessInterface
      */
     public static function getWizardConfig(): WizardTemplateConfigInterface
     {
-        // TODO: Implement getWizardConfig() method.
+       return new WizardTemplateConfig();
     }
 
     /**
