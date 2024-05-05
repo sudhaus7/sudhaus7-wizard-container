@@ -1,0 +1,36 @@
+stages:
+  - pages
+  - deploy
+
+deploy:
+  stage: deploy
+  image: curlimages/curl:latest
+  only:
+    - tags
+  except:
+    - branches
+  script:
+    - 'curl --header "Job-Token: $CI_JOB_TOKEN" --data tag=$CI_COMMIT_TAG "${CI_API_V4_URL}/projects/$CI_PROJECT_ID/packages/composer"'
+
+pages:
+  stage: pages
+  image: docker:20.10.16
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - ls -la
+    - ls -la Documentation
+    - 'mkdir Documentation-GENERATED-temp'
+    - 'docker run --rm -v `pwd`:/PROJECT -v `pwd`/Documentation-GENERATED-temp:/RESULT ghcr.io/t3docs/render-documentation:latest  makehtml'
+    - 'mv Documentation-GENERATED-temp/Result/project/0.0.0 public'
+    - 'cp public/Index.html public/index.html'
+  artifacts:
+    when: on_success
+    paths:
+      - public
